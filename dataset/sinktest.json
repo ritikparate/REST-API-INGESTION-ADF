@@ -1,0 +1,13 @@
+{
+	"name": "sinktest",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "restsink",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

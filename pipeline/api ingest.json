@@ -1,0 +1,306 @@
+{
+	"name": "api ingest",
+	"properties": {
+		"activities": [
+			{
+				"name": "Until",
+				"type": "Until",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(variables('hasmoredata'),bool('true'))",
+						"type": "Expression"
+					},
+					"activities": [
+						{
+							"name": "Get API Meta",
+							"type": "WebActivity",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"method": "GET",
+								"headers": {
+									"x-api-key": "79468eb0d74040f1b22945e6a158a5ff"
+								},
+								"url": {
+									"value": "@concat('https://newsapi.org/v2/everything?q=', encodeUriComponent(pipeline().parameters.q), '&from=', pipeline().parameters.from, '&sortBy=', pipeline().parameters.sortBy,'&page=',string(variables('page')),'&pageSize=',string(pipeline().parameters.pageSize))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "To check if data exists",
+							"type": "IfCondition",
+							"dependsOn": [
+								{
+									"activity": "Get API Meta",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"userProperties": [],
+							"typeProperties": {
+								"expression": {
+									"value": "@not(equals(string(activity('Get API Meta').output), '{\n    \"status\": \"ok\",\n    \"totalResults\": 0,\n    \"articles\": []\n}'))",
+									"type": "Expression"
+								},
+								"ifTrueActivities": [
+									{
+										"name": "APITEST",
+										"type": "Copy",
+										"dependsOn": [],
+										"policy": {
+											"timeout": "0.12:00:00",
+											"retry": 0,
+											"retryIntervalInSeconds": 30,
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"source": {
+												"type": "RestSource",
+												"httpRequestTimeout": "00:01:40",
+												"requestInterval": "00.00:00:00.010",
+												"requestMethod": "GET"
+											},
+											"sink": {
+												"type": "DelimitedTextSink",
+												"storeSettings": {
+													"type": "AzureBlobFSWriteSettings",
+													"copyBehavior": "FlattenHierarchy"
+												},
+												"formatSettings": {
+													"type": "DelimitedTextWriteSettings",
+													"quoteAllText": true,
+													"fileExtension": ".csv"
+												}
+											},
+											"enableStaging": false,
+											"translator": {
+												"type": "TabularTranslator",
+												"mappings": [
+													{
+														"source": {
+															"path": "['author']"
+														},
+														"sink": {
+															"name": "author",
+															"type": "String"
+														}
+													},
+													{
+														"source": {
+															"path": "['title']"
+														},
+														"sink": {
+															"name": "title",
+															"type": "String"
+														}
+													},
+													{
+														"source": {
+															"path": "['description']"
+														},
+														"sink": {
+															"name": "description",
+															"type": "String"
+														}
+													},
+													{
+														"source": {
+															"path": "['url']"
+														},
+														"sink": {
+															"name": "url",
+															"type": "String"
+														}
+													},
+													{
+														"source": {
+															"path": "['publishedAt']"
+														},
+														"sink": {
+															"name": "publishedAt",
+															"type": "DateTime"
+														}
+													},
+													{
+														"source": {
+															"path": "['content']"
+														},
+														"sink": {
+															"name": "content",
+															"type": "String"
+														}
+													}
+												],
+												"collectionReference": "$['articles']",
+												"mapComplexValuesToString": false
+											}
+										},
+										"inputs": [
+											{
+												"referenceName": "APICALLTEST",
+												"type": "DatasetReference",
+												"parameters": {
+													"q": {
+														"value": "@pipeline().parameters.q",
+														"type": "Expression"
+													},
+													"from": {
+														"value": "@pipeline().parameters.from",
+														"type": "Expression"
+													},
+													"sortBy": {
+														"value": "@pipeline().parameters.sortBy",
+														"type": "Expression"
+													},
+													"page": {
+														"value": "@variables('page')",
+														"type": "Expression"
+													},
+													"pageSize": {
+														"value": "@pipeline().parameters.pageSize",
+														"type": "Expression"
+													}
+												}
+											}
+										],
+										"outputs": [
+											{
+												"referenceName": "SINKING",
+												"type": "DatasetReference"
+											}
+										]
+									},
+									{
+										"name": "Increment Page in temp",
+										"type": "SetVariable",
+										"dependsOn": [
+											{
+												"activity": "APITEST",
+												"dependencyConditions": [
+													"Succeeded"
+												]
+											}
+										],
+										"policy": {
+											"secureOutput": false,
+											"secureInput": false
+										},
+										"userProperties": [],
+										"typeProperties": {
+											"variableName": "tempcounter",
+											"value": {
+												"value": "@add(int(variables('page')),1)",
+												"type": "Expression"
+											}
+										}
+									}
+								]
+							}
+						},
+						{
+							"name": "Allocate temp to page",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "To check if data exists",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "page",
+								"value": {
+									"value": "@int(variables('tempcounter'))",
+									"type": "Expression"
+								}
+							}
+						},
+						{
+							"name": "Exit loop",
+							"type": "SetVariable",
+							"dependsOn": [
+								{
+									"activity": "Get API Meta",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"variableName": "hasmoredata",
+								"value": {
+									"value": "@bool('false')",
+									"type": "Expression"
+								}
+							}
+						}
+					],
+					"timeout": "0.12:00:00"
+				}
+			}
+		],
+		"parameters": {
+			"q": {
+				"type": "string",
+				"defaultValue": "india"
+			},
+			"from": {
+				"type": "string",
+				"defaultValue": "2025-12-01"
+			},
+			"sortBy": {
+				"type": "string",
+				"defaultValue": "publishedAt"
+			},
+			"pageSize": {
+				"type": "int",
+				"defaultValue": 50
+			}
+		},
+		"variables": {
+			"page": {
+				"type": "Integer",
+				"defaultValue": 1
+			},
+			"tempcounter": {
+				"type": "Integer",
+				"defaultValue": 1
+			},
+			"hasmoredata": {
+				"type": "Boolean",
+				"defaultValue": true
+			},
+			"exitvariable": {
+				"type": "Boolean",
+				"defaultValue": false
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2025-12-15T11:04:39Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}

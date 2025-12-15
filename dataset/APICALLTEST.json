@@ -1,0 +1,36 @@
+{
+	"name": "APICALLTEST",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "TEST",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"q": {
+				"type": "string"
+			},
+			"from": {
+				"type": "string"
+			},
+			"sortBy": {
+				"type": "string"
+			},
+			"page": {
+				"type": "int"
+			},
+			"pageSize": {
+				"type": "int"
+			}
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@concat('v2/everything?q=', encodeUriComponent(dataset().q), '&from=', dataset().from, '&sortBy=', dataset().sortBy,'&page=',string(dataset().page),'&pageSize=',string(dataset().pageSize))",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
