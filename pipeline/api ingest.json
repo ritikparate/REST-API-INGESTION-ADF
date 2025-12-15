@@ -9,7 +9,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(variables('hasmoredata'),bool('true'))",
+						"value": "@equals(variables('hasmoredata'),true)",
 						"type": "Expression"
 					},
 					"activities": [
