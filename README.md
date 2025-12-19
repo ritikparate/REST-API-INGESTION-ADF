@@ -33,6 +33,18 @@ This pipeline dynamically pulls news data based on your search criteria and tran
 2. **Output Schema**
    - CSV includes: author, title, description, url, publishedAt, content
 
+## Screenshots from Azure
+
+1. Complete Pipeline inside Until Loop
+<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/29fa72c8-917e-4b3a-a0f9-ca8efb899e1b" />
+
+2. Success workflow of Pipeline from ingestion to dumping
+   - This executed within a minute showing fast processing
+<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/4d7276c7-fa5f-4a87-8a5e-c8b6ccc2d391" />
+
+3. Testing Deployement in Azure DevOps
+<img width="1000" height="500" alt="image" src="https://github.com/user-attachments/assets/d1d4de42-a9a7-426f-a353-9969b5f56add" />
+
 ## ⚠️ Common Issues
 
 - **400 Error**: Check API key and parameter encoding
