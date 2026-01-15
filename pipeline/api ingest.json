@@ -28,7 +28,7 @@
 							"typeProperties": {
 								"method": "GET",
 								"headers": {
-									"x-api-key": "79468eb0d74040f1b22945e6a158a5ff"
+									"x-api-key": "ENTER API KEY"
 								},
 								"url": {
 									"value": "@concat('https://newsapi.org/v2/everything?q=', encodeUriComponent(pipeline().parameters.q), '&from=', pipeline().parameters.from, '&sortBy=', pipeline().parameters.sortBy,'&page=',string(variables('page')),'&pageSize=',string(pipeline().parameters.pageSize))",
